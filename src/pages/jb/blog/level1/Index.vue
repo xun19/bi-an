@@ -25,7 +25,7 @@
     </div>
 </template>
 <script lang="ts" setup>
-import src from '@/assets/images/1.jpeg'
+import src from '@/assets/images/puyi2.jpeg'
 import CluePoint from '@/components/system/CluePoint.vue'
 </script>
 <style>

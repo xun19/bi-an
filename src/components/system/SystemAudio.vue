@@ -16,7 +16,7 @@
 </template>
 <script lang="ts" setup>
 import {computed, onMounted} from 'vue'
-import EasyRing from './Xring.vue'
+import {EasyRingVueComponent as EasyRing} from 'easy-ring'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import useSystemAudioStore from '@/state/system/audio'
 

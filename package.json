@@ -10,7 +10,7 @@
     "lint": "eslint --ext .ts,.js,.vue --fix src"
   },
   "dependencies": {
-    "easy-ring": "^1.1.13",
+    "easy-ring": "^2.0.0-alpha.9",
     "element-plus": "^2.2.13",
     "lodash-es": "^4.17.21",
     "nerdamer": "^1.1.13",

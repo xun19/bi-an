@@ -21,10 +21,10 @@ const props = defineProps({
 		type: Boolean,
 		default: false
 	},
-    loop: {
-        type: Boolean,
+	loop: {
+		type: Boolean,
 		default: true
-    }
+	}
 	// 音量
 	// 静音
 	// 播放速度
@@ -79,15 +79,16 @@ const pause = () => {
 }
 
 const endHandle = () => {
-    console.log('easy-ring:end')
-    if (!props.loop) {
-        emits('update:ring', false)
-    }
+	console.log('easy-ring:end')
+	if (!props.loop) {
+		emits('update:ring', false)
+	}
+
 	emits('ended')
 }
 
 onMounted(() => {
-    audioObject = document.getElementById(`easyRing${id.value}`)
+	audioObject = document.getElementById(`easyRing${id.value}`)
 	console.log('easy-ring:mounted')
 })
 </script>
