@@ -1,1 +1,1 @@
-export type ModalType = 'skill' | 'clue' | 'msg' | 'settings'
+export type ModalType = 'skill' | 'clue' | 'msg' | 'settings' | 'help'

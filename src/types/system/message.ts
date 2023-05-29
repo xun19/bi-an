@@ -5,7 +5,7 @@ export enum SystemMsgType {
 	send
 }
 
-export enum Annextype {
+export enum Annextype { // 附件
 	clue
 }
 

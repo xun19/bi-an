@@ -1,7 +1,8 @@
-// TODO：尽量把游戏体验放到剧情上（毕竟定位成是文字解密类型），也就是通过文字（配置）来实现。而不要过多去刁钻各种技术
+// TODO：尽量把游戏体验放到剧情上（毕竟定位成是文字解密类型），也就是通过文字（配置）来实现。而不要过多去刁钻各种技术 (x)
+// 还是剧情为机制服务才对
 // TODO: Affix挺有意思（虽然不知道实际会这种需求么？更像是娱乐用的）
 
-import type {CluePoint} from './clue'
+import type {CluePoint} from '../system/clue'
 
 export type Blog = {
 	id: number;

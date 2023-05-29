@@ -19,8 +19,8 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from 'vue'
-import { ElMessageBox, ElButton, ElDialog } from 'element-plus' // 必须引入ElDialog、ElButton
+import {ref} from 'vue'
+import {ElMessageBox, ElButton, ElDialog} from 'element-plus' // 必须引入ElDialog、ElButton
 
 // const props = defineProps({ // 此方法不需要import
 //   visible: {
@@ -30,7 +30,6 @@ import { ElMessageBox, ElButton, ElDialog } from 'element-plus' // 必须引入E
 // })
 // const emit = defineEmits(['update:visible'])
 
-
 // watch(() => props.visible, val => dialogVisible.value = val)
 
 const dialogVisible = ref(false)
@@ -38,18 +37,19 @@ const title = ref('')
 const msg = ref('')
 
 const handleClose = (done: () => void) => {
-  ElMessageBox.confirm('Are you sure to close this dialog?')
-    .then(() => {
-      done()
-    })
-    .catch(() => {
-      // catch error
-    })
+	ElMessageBox.confirm('Are you sure to close this dialog?')
+		.then(() => {
+			done()
+		})
+		.catch(() => {
+			// catch error
+		})
 }
+
 defineExpose({
-  title,
-  msg,
-  dialogVisible
+	title,
+	msg,
+	dialogVisible
 })
 
 </script>

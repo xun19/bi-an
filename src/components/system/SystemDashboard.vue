@@ -1,22 +1,22 @@
 <template>
     <!-- 可收起/展开，以防某些时候妨碍页面视线和交互 -->
     <div class="container">
-        <el-progress 
-            type="dashboard" 
+        <el-progress
+            type="dashboard"
             :stroke-width="8"
             :width="150"
-            :percentage="percentage" 
+            :percentage="percentage"
             :color="colors"
         >
             <div class="investigation-points">{{percentage}}/{{nextVersion.needInvestigationPoints}}</div>
             <div class="version">当前版本:&nbsp;{{currentVersion.versionNum}}</div>
         </el-progress>
         <div class="dark-dashboard">
-            <el-progress 
-                type="dashboard" 
+            <el-progress
+                type="dashboard"
                 :stroke-width="3"
                 :width="50"
-                :percentage="darkPercentage" 
+                :percentage="darkPercentage"
                 :color="darkColor"
             >
                 <!-- <div style="font-weight: 600;transform:scale(0.8);">{{darkPercentage}}%</div> -->
@@ -25,12 +25,13 @@
                         class="warn-icon"
                         fit="fill"
                         :src="warnIcon"
+                        @click="showModal('help')"
                     />
                 </a>
             </el-progress>
         </div>
-        <a 
-            class="feature clue" 
+        <a
+            class="feature clue"
             title="线索"
             @click="showModal('clue')"
         >
@@ -40,8 +41,8 @@
                 :src="clueIcon"
             />
         </a>
-        <a 
-            class="feature settings" 
+        <a
+            class="feature settings"
             title="设置"
             @click="showModal('settings')"
         >
@@ -51,8 +52,8 @@
                 :src="settingsIcon"
             />
         </a>
-        <a 
-            class="feature skill" 
+        <a
+            class="feature skill"
             title="能力"
             @click="showModal('skill')"
         >
@@ -62,8 +63,8 @@
                 :src="skillIcon"
             />
         </a>
-        <a 
-            class="feature msg" 
+        <a
+            class="feature msg"
             title="邮件"
             @click="showModal('msg')"
         >
@@ -74,10 +75,10 @@
             />
         </a>
         <div class="action-tab">
-            <el-carousel 
-                height="20px" 
-                arrow="always" 
-                :autoplay="false" 
+            <el-carousel
+                height="20px"
+                arrow="always"
+                :autoplay="false"
                 trigger="click"
                 @change="changeAction"
             >
@@ -101,18 +102,22 @@
     <MsgModal
         v-model:visible="modalConfigs.msg"
     />
+    <HelpModal
+        v-model:visible="modalConfigs.help"
+    />
 </template>
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import {ref, reactive, computed, onMounted} from 'vue'
 import SkillsModal from './SkillsModal.vue'
 import MsgModal from './MsgModal.vue'
 import SettingsModal from './SettingsModal.vue'
 import ClueModal from './ClueModal.vue'
-import { ModalType } from '@/types/system/modal'
+import HelpModal from './HelpModal.vue'
+import {ModalType} from '@/types/system/modal'
 
-import { useSystemStore } from '@/state/system/system'
-import { useSkillStore } from '@/state/system/skill'
-import { SkillType } from '@/types/system/skill'
+import {useSystemStore} from '@/state/system/system'
+import {useSkillStore} from '@/state/system/skill'
+import {SkillType} from '@/types/system/skill'
 import useSystemAudioStore from '@/state/system/audio'
 
 import clueIcon from '@/assets/system/clue.svg'
@@ -123,29 +128,31 @@ import warnIcon from '@/assets/system/warn.svg'
 
 const systemAudioStore = useSystemAudioStore()
 const ringItemAudio = () => {
-    systemAudioStore.ringItem()
-}
-const ringClickAudio = () => {
-    systemAudioStore.ringClick()
+	systemAudioStore.ringItem()
 }
 
+const ringClickAudio = () => {
+	systemAudioStore.ringClick()
+}
 
 const modalConfigs = reactive({
-    skill: false,
-    clue: false,
-    msg: false,
-    settings: false
+	skill: false,
+	clue: false,
+	msg: false,
+	settings: false,
+	help: false
 })
 const showModal = (key: ModalType) => {
-    Object.keys(modalConfigs).forEach((i) => {
-        const k = i as ModalType
-        modalConfigs[k] = false
-    })
-    modalConfigs[key] = true
-    ringItemAudio()
+	Object.keys(modalConfigs).forEach(i => {
+		const k = i as ModalType
+		modalConfigs[k] = false
+	})
+	modalConfigs[key] = true
+	ringItemAudio()
 }
+
 const changeAction = () => {
-    ringClickAudio()
+	ringClickAudio()
 }
 
 const systemStore = useSystemStore()
@@ -155,31 +162,33 @@ const nextVersion = computed(() => systemStore.nextVersion)
 const skillStore = useSkillStore()
 const skillActionList = computed(() => skillStore.skillList.filter(item => item.type === SkillType.action))
 
-
 const percentage = ref(0)
-const darkPercentage = ref(0) // TODO: 实际上就是惩罚值吧？每弄错一个步骤，就会增加暗化值（即增加惩罚）。那么可以这个消除么，通过特定方式、或者消灭特定敌人？
+const darkPercentage = ref(0)
+// eslint-disable-next-line no-warning-comments
+// TODO: 实际上就是惩罚值吧？每弄错一个步骤，就会增加暗化值（即增加惩罚）。
+// 那么可以这个消除么，通过特定方式、或者消灭特定敌人？
 const colors = [
-  { color: '#f56c6c', percentage: 20 },
-  { color: '#e6a23c', percentage: 40 },
-  { color: '#5cb87a', percentage: 60 },
-  { color: '#1989fa', percentage: 80 },
-  { color: '#6f7ad3', percentage: 100 },
+	{color: '#f56c6c', percentage: 20},
+	{color: '#e6a23c', percentage: 40},
+	{color: '#5cb87a', percentage: 60},
+	{color: '#1989fa', percentage: 80},
+	{color: '#6f7ad3', percentage: 100},
 ]
 const darkColor = [
-  { color: 'red', percentage: 20 },
-  { color: 'red', percentage: 40 },
-  { color: 'red', percentage: 60 },
-  { color: 'red', percentage: 80 },
-  { color: 'red', percentage: 100 },
+	{color: 'red', percentage: 20},
+	{color: 'red', percentage: 40},
+	{color: 'red', percentage: 60},
+	{color: 'red', percentage: 80},
+	{color: 'red', percentage: 100},
 ]
 
 onMounted(() => {
-  setInterval(() => {
-    percentage.value = (percentage.value % 100) + 10
-  }, 500)
-  setInterval(() => {
-    darkPercentage.value = (darkPercentage.value % 100) + 4
-  }, 1000)
+	setInterval(() => {
+		percentage.value = (percentage.value % 100) + 10
+	}, 500)
+	setInterval(() => {
+		darkPercentage.value = (darkPercentage.value % 100) + 4
+	}, 1000)
 })
 
 </script>
@@ -280,8 +289,4 @@ onMounted(() => {
     }
 }
 </style>
-
-
-
-
 

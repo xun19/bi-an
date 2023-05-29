@@ -8,6 +8,10 @@ const routes: RouteRecordRaw[] = [
 		redirect: '/test',
 		children: [
 			{
+				path: 'l2',
+				component: async () => import('@//pages/jb/blog/level2/Index.vue')
+			},
+			{
 				path: '/jb',
 				redirect: '/jb/test',
 				component: async () => import('@/layout/PageContainer.vue'),
