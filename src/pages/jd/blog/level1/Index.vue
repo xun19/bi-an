@@ -32,6 +32,6 @@ import CluePoint from '@/components/system/CluePoint.vue'
     .cursor-search {
         /* 逗号分隔依次的选项。最后一个必须是一个关键字，以防所有图片加载不出时显示（填auto即可） */
         /* 图片大小不能过大。这里svg选择16的尺寸 */
-        cursor: url('http://127.0.0.1:5173/src/assets/cursor/search.svg'), auto;
+        cursor: url('http://127.0.0.1:5174/src/assets/cursor/search.svg'), auto;
     }
 </style>

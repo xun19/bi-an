@@ -1,5 +1,5 @@
 <template>
-    <div @click="emitGetClues">
+    <div class="clue-point-container cursor-search " @click="emitGetClues">
         <slot></slot>
     </div>
 </template>
@@ -21,6 +21,3 @@ const emitGetClues = () => {
 	// TODO: 写入store
 }
 </script>
-
-<style>
-</style>

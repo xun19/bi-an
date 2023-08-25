@@ -9,34 +9,54 @@ const routes: RouteRecordRaw[] = [
 		children: [
 			{
 				path: 'l2',
-				component: async () => import('@//pages/jb/blog/level2/Index.vue')
+				component: async () => import('@//pages/jd/blog/level2/Index.vue')
 			},
 			{
-				path: '/jb',
-				redirect: '/jb/test',
+				path: '/jd',
+				redirect: '/jd/test',
 				component: async () => import('@/layout/PageContainer.vue'),
 				children: [
 					{
 						path: 'demo',
-						// '@/pages/jb/demo/Index.vue' (demo/index) 有毒？
-						component: async () => import('@/pages/jb/demos/Index.vue')
+						// '@/pages/jd/demo/Index.vue' (demo/index) 有毒？
+						component: async () => import('@/pages/jd/demos/Index.vue')
 					},
 					{
 						path: 'watcher',
-						component: async () => import('@/pages/jb/watcher/Index.vue')
+						component: async () => import('@/pages/jd/watcher/Index.vue')
 					},
 					{
 						path: 'blog',
-						redirect: '/jb/blog/level1',
-						component: async () => import('@/pages/jb/blog/Index.vue'),
+						redirect: '/jd/blog/level1',
+						component: async () => import('@/pages/jd/blog/Index.vue'),
 						children: [
 							{
 								path: 'level1',
-								component: async () => import('@//pages/jb/blog/level1/Index.vue')
+								component: async () => import('@//pages/jd/blog/level1/Index.vue')
+							},
+							{
+								path: 'levelxx',
+								component: async () => import('@//pages/jd/blog/levelxx/Index.vue')
+							},
+							{
+								path: 'level-cursor',
+								component: async () => import('@//pages/jd/blog/level-cursor/Index.vue')
+							},
+							{
+								path: 'level-anime',
+								component: async () => import('@//pages/jd/blog/level-anime/Index.vue')
+							},
+							{
+								path: 'level-anime-cursor',
+								component: async () => import('@//pages/jd/blog/level-anime-cursor/Index.vue')
+							},
+							{
+								path: 'level-svg',
+								component: async () => import('@//pages/jd/blog/level-svg/Index.vue')
 							},
 							{
 								path: `${x}`, // 引入加密字符串变量？
-								component: async () => import('@//pages/jb/blog/level1/Index.vue')
+								component: async () => import('@//pages/jd/blog/level1/Index.vue')
 							}
 							// Fangjia kui
 							// dianli
@@ -52,8 +72,12 @@ const routes: RouteRecordRaw[] = [
 				]
 			},
 			{
-				path: 'test',
-				component: async () => import('@/pages/jb/test/Index.vue')
+				path: '/test',
+				component: async () => import('@/pages/jd/test/Index.vue')
+			},
+			{
+				path: '/test-cursor',
+				component: async () => import('@/pages/jd/test/test-cursor.vue')
 			}
 		]
 	}

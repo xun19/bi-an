@@ -7,6 +7,7 @@ export default ({
 	title: '',
 	msg: ''
 }) => {
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 	app.config.globalProperties.$showDialogue({_title: title, _msg: msg})
 }
 

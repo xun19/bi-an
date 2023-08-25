@@ -1,3 +1,4 @@
+/* eslint-disable no-mixed-operators */
 /**
  * 核心：中心圆元素
  * 功能：能够读取鼠标移动坐标，并进行位移
