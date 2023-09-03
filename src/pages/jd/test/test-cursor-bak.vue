@@ -1,75 +1,40 @@
 <template>
     <div>speed: <span :style="{color}">{{cursorSpeed}}</span> / 100</div>
-    <div style="font-size:20px;">HP: <span style="color: red;">{{hp}}</span> / 100</div>
-    <div v-if="isProtected">保护期中...</div>
-    <svg id="SvgContainer" width="100" height="100" style="position:absolute">
-    <defs>
-      <linearGradient id="Gradient1">
-        <stop class="stop1" offset="0%" />
-        <stop class="stop2" offset="50%" />
-        <stop class="stop3" offset="100%" />
-      </linearGradient>
-      <linearGradient id="Gradient2" x1="1" x2="0" y1="0" y2="0">
-        <stop offset="0%" stop-color="red" />
-        <stop offset="50%" stop-color="black" stop-opacity="0" />
-        <stop offset="100%" stop-color="blue" />
-      </linearGradient>
-      <!-- <style type="text/css">
-        <![CDATA[
-                #rect1 { fill: url(#Gradient1); }
-                .stop1 { stop-color: red; }
-                .stop2 { stop-color: black; stop-opacity: 0; }
-                .stop3 { stop-color: blue; }
-              ]]>
-      </style> -->
-    </defs>
-  </svg>
+    <!-- <div>progress:{{ progress }}</div>
+    <div>diff: {{ progress - prevProgress }}</div>
+    <div id="ele"></div> -->
+    <!-- <svg width="1000" height="1000">
+        <polygon points="0 0 100 0 100 100 0 100" id="polygon" fill="red" @mousemove="aaa">
+            <animateTransform attributeName="transform" attributeType="XML"
+            type="rotate" from="0" to="360" dur="3s" repeatCount="indefinite"/>
+            <animateTransform attributeName="transform" attributeType="XML"
+            type="translate" from="0 0" to="50 50" dur="1.5s" repeatCount="indefinite" begin="0s"/>
+        </polygon>
+    </svg> -->
+    <!-- <svg width="200" height="200">
+  <rect x="0" y="0" width="100" height="100" fill="red" id="polygon">
+    <animateTransform attributeName="transform" attributeType="XML"
+      type="rotate" from="0" to="360" dur="3s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" attributeType="XML"
+      type="translate" from="0 0" to="50 50" dur="1.5s" repeatCount="indefinite" begin="0s"/>
+  </rect>
+</svg>  -->
 </template>
 <script lang="ts" setup>
 import {ref, computed, onMounted} from 'vue'
 import Cursor from '@/entity/Cursor'
 import {Diabstracter} from '@/entity/Diabstracter'
-import {ExtendedPolygon} from '@/entity/Polygon'
-
-const hp = ref(100)
-const isProtected = ref(true)
-setTimeout(() => {
-	isProtected.value = false
-}, 3000)
-
+// import anime from 'animejs'
 const cursorSpeed = ref(0)
 const color = computed(() => cursorSpeed.value > 100 ? 'red' : 'blue')
 
 const cursor: any = new Cursor()
+cursor._bindMouseMoveEvent()
+cursor._computeMouseMoveSpeed()
 cursor.subscribeComputingMouseSpeed((speed: number) => {
 	cursorSpeed.value = Math.ceil(speed)
 })
-cursor.subscribeCollisonEvent(() => {
-	// if (!isProtected.value) {
-	hp.value -= 1
-	// 	isProtected.value = true
-	// 	setTimeout(() => {
-	// 		isProtected.value = false
-	// 	}, 3000)
-	// }
 
-	if (hp.value <= 0) {
-
-		// alert('you lose!')
-	}
-})
-
-onMounted(() => {
-	const polygon = new ExtendedPolygon({
-		points: [[0, 0], [100, 0], [100, 100], [0, 100]],
-		center: [50, 50],
-		position: [0, 0],
-		svgContainer: 'SvgContainer'
-	})
-
-	diabstracter._addPolygon(polygon)
-	diabstracter.startState()
-})
 const diabstracter = new Diabstracter({
 	HP: 0,
 	HP_TOTAL: 0,
@@ -85,14 +50,15 @@ const diabstracter = new Diabstracter({
 	rotateSpeed: 1, // 4,
 	response: 1,
 
-	viewRange: 1000,
-
 	center: [50, 50],
 	occupancyArea: {
 		width: 100,
 		height: 100,
 	}
 })
+
+diabstracter._addPartsPolygon([0, 0, 0, 100, 100, 100, 100, 0])
+diabstracter.startState()
 
 // const progress = ref(0)
 // const prevProgress = ref(0)

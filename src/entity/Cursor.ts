@@ -89,6 +89,7 @@ class Cursor implements Entity {
 
 	subscribeMouseMoveEventList: Array<(position: number[]) => void> = []
 	subscribeComputingMouseSpeedList: Array<(speed?: number) => void> = []
+	subscribeCollisonList: Array<() => void> = []
 
 	constructor() {
 		if (!Cursor.instance) {
@@ -324,8 +325,20 @@ class Cursor implements Entity {
 		})
 	}
 
+	subscribeCollisonEvent(callback: () => void) {
+		this.subscribeCollisonList.push(callback)
+	}
+
+	_publishCollisonEvent() {
+		this.subscribeCollisonList.forEach(callback => {
+			callback()
+		})
+	}
+
 	handleMsg(msg: EntitiesMsgInterface) {
-		// console.log(msg)
+		if (msg.type === EntitiesMsgTypeEnum.Cursor_Collision) {
+			this._publishCollisonEvent()
+		}
 	}
 
 	destroy() {

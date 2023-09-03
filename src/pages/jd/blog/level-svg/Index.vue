@@ -2,13 +2,14 @@
 	<div>
 		<div>count: {{ count }}</div>
 		<div>frame: {{ frame }}</div>
-		<svg id="svg" width="1000" height="1000">
+		<div>frame: {{ count / frame }}</div>
+		<!-- <svg id="svg" width="1000" height="1000">
 			<polygon
 				id="polygon"
 				points="50, 160 55, 180 70, 180 60, 190 65, 205 50, 195 35, 205 40, 190 30, 180 45, 180"
 				fill="blue"
 			/>
-		</svg>
+		</svg> -->
 		<svg id="svg2" width="1500" height="1000" style="position:absolute;left:0;top:0;">
 			<!-- <image :href="yanjiangImg" x="50" y="50" width="300" height="300" /> -->
 			<defs>
@@ -22,7 +23,7 @@
 				fill="url(#image)"
 			/>
 		</svg>
-		<svg width="400" height="400">
+		<!-- <svg width="400" height="400">
 			<defs>
 				<pattern id="image" x="0" y="0" width="100%" height="100%">
 					<image :href="yanjiangImg" width="100" height="100" />
@@ -32,14 +33,14 @@
 		</svg>
 		<svg width="400" height="400">
 			<polygon points="50,0 100,100 0,100" fill="linear-gradient(to right, transparent 50%, rgba(255, 0, 0, 0.5) 50%) 10px 0"></polygon>
-		</svg>
+		</svg> -->
 	</div>
 </template>
 <script lang="ts" setup>
 import {ref, onMounted} from 'vue'
 import anime from 'animejs/lib/anime.es.js'
 import * as SAT from 'sat'
-import yanjiangImg from '@/assets/1.gif'
+// import yanjiangImg from '@/assets/1.gif'
 
 import bg1 from '@/assets/岩浆/1.png'
 import bg2 from '@/assets/岩浆/2.png'
@@ -130,9 +131,12 @@ const p = [
 
 let animation = null as any
 let isAnimationFinished: boolean = false
-const fps = 60
-const duration = 100000 // 10000 // 2000 这么快也是也可以的
-const speed = (2000 / ((duration / 1000) * fps)) // 5px/ms 差不多了
+const translateX = 2000
+const rotate = 45
+const fps = 30 // 30
+const duration = 10000 // 10000 // 2000 这么快也是也可以的
+const speed = (translateX / ((duration / 1000) * fps)) // 5px/ms 差不多了
+const angleSpeed = (rotate / ((duration / 1000) * fps))
 console.log('speed:', speed)
 
 const polygon = new SAT.Polygon(new SAT.Vector(0, 0), [
@@ -158,7 +162,11 @@ const checkCollision = (keyframePoints: any[]) => {
 	// 	new SAT.Vector((x - w) / 2, (y + h) / 2) // 左下角
 	// ]
 
-	polygon.translate(speed, 0)
+	// polygon.translate(speed, 0)
+	// console.log(polygon.calcPoints)
+
+	const rotationAngle = Math.PI * (angleSpeed / 180)
+	polygon.rotate(rotationAngle)
 
 	const time = new Date().getTime()
 
@@ -170,7 +178,7 @@ const checkCollision = (keyframePoints: any[]) => {
 	// const pos = new SAT.Vector(center.x, center.y)
 
 	// 创建圆形对象，代表鼠标
-	const circle = new SAT.Circle(new SAT.Vector(mouseX, mouseY), 4)
+	const circle = new SAT.Circle(new SAT.Vector(mouseX, mouseY), 1)
 	// const mouse = new SAT.Vector(mouseX, mouseY)
 
 	// 检测碰撞
@@ -178,8 +186,6 @@ const checkCollision = (keyframePoints: any[]) => {
 	const isColliding = SAT.testPolygonCircle(polygon, circle, response)
 	// const response2 = new SAT.Response()
 	// const isColliding2 = SAT.testCirclePolygon(circle, polygon, response2)
-
-	count.value += 1
 
 	// console.log('t:', new Date().getTime() - time, isColliding, polygon, circle)
 	// console.log([x, y], [mouseX, mouseY])
@@ -203,18 +209,17 @@ const checkCollision = (keyframePoints: any[]) => {
 }
 
 onMounted(() => {
-	const translateX = 2000
+	setInterval(() => {
+		count.value += 10
+	}, 10)
 	animation = anime({
 		targets: '#polygon2',
 		position: 'relative',
-		translateX: `${translateX}px`,
+		// translateX: `${translateX}px`,
+		rotate: {
+			value: '45deg'
+		},
 		duration,
-		// translateX: [
-		// 	{value: '500px', duration: 1000},
-		// 	{value: '500px', duration: 1000},
-		// 	{value: '500px', duration: 1000},
-		// 	{value: '500px', duration: 1000}
-		// ],
 		easing: 'linear', // 'easeInOutQuad', // 必须线性移动，anim.progress才能用得上
 		autoplay: false,
 		// direction: 'alternate',

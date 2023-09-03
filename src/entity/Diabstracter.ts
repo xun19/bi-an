@@ -1,21 +1,28 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import * as SAT from 'sat'
+import type * as SAT from 'sat'
 
 import {
 	type State,
 	State_Initial,
 	State_SearchPlayer,
 	State_DiscoverPlayer,
-	State_LosePlayerPosition
-	// State_Move
+	State_LosePlayerPosition,
+	State_Move_Test,
+	State_Rotate_Test
 } from './DiabstracterState'
 
 import {EntityTypeEnum, EntityManager} from './Entity'
 import type {Entity} from './Entity'
 
-import type {EntitiesMsg, EntitiesMsgInterface} from './Msg'
-import {MsgDispatcher} from './Msg'
+import type {ExtendedPolygonInterface, Point} from './Polygon'
+import {ExtendedPolygon} from './Polygon'
+
+import type {EntitiesMsgInterface} from './Msg'
+import {EntitiesMsg} from './Msg'
+import {EntitiesMsgTypeEnum, MsgDispatcher} from './Msg'
+
+import Cursor from './Cursor'
 
 enum EmotionalStateEnum {
 	calm, // 平静。也是初始状态
@@ -50,6 +57,8 @@ type DiabstracterInitalParams = {
 	rotateSpeed: number;
 	response: number;
 
+	viewRange: number;
+
 	center: [number, number];
 	occupancyArea: { // 也是表示其实体的svg的宽高？
 		width: number;
@@ -57,6 +66,7 @@ type DiabstracterInitalParams = {
 	};
 }
 
+// 能够影响页面的被玷污残念，阻碍获取信息情报
 type DiabstracterInterface = {
 	viewRange: number;
 
@@ -69,8 +79,7 @@ type DiabstracterInterface = {
 
 	// 以多边形点来表示其实体轮廓（即模型）
 	svg: SVGSVGElement;
-	partsPolygonPointsList: PartsPolygonPoints[]; // 其实没啥用，后面这些数值不会变更
-	partsSATPolygons: PartsSATPolygon[]; // 要取到变化后的坐标，还是得从polygon对象这里取，它们的坐标是同步更新的
+	polygons: ExtendedPolygonInterface[]; // 要取到变化后的坐标，还是得从polygon对象这里取，它们的坐标是同步更新的
 	svgEleIds: string[]; // svg内部各部件多边形元素的id
 
 	currentState: State_Initial;
@@ -85,10 +94,7 @@ type DiabstracterInterface = {
 	_defineOccupancyArea: (params: OccupancyArea) => void;
 	_updateOccupancyArea: (params: OccupancyArea) => void;
 
-	_setEntitySVG: () => void;
-	_addPartsPolygon: (partsPolygonPoints: PartsPolygonPoints) => void;
-	_createPartsSATPolygon: (partsPolygonPoints: PartsPolygonPoints) => void;
-	_createPartsSVGPath: (partsPolygonPoints: PartsPolygonPoints) => void;
+	_addPolygon: (polygon: ExtendedPolygonInterface) => void;
 
 	_updateEmotionalState: (state: EmotionalStateEnum) => void;
 	_createEmotionalStateLabel: () => void;
@@ -119,7 +125,7 @@ class Diabstracter implements DiabstracterInterface {
 	rotateSpeed = 0
 	response = 0 // 反应力系数。会对行动的时间进行延长（大于1）或者缩短（小于1）。默认为1（正常水平，无延长、缩短）
 
-	viewRange = 400 // 视野范围
+	viewRange = 10 // 视野范围
 
 	center = [0, 0] as [number, number] // 指的是其中心点
 	occupancyArea = {
@@ -135,8 +141,7 @@ class Diabstracter implements DiabstracterInterface {
 	currentRotateAngle = 0
 
 	svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-	partsPolygonPointsList: PartsPolygonPoints[] = []
-	partsSATPolygons: PartsSATPolygon[] = []
+	polygons: ExtendedPolygonInterface[] = []
 	svgEleIds: string[] = []
 
 	currentState = new State_Initial()
@@ -144,7 +149,6 @@ class Diabstracter implements DiabstracterInterface {
 	constructor(params: DiabstracterInitalParams) {
 		this._initBasicInfo(params)
 		this._initPosition(params)
-		this._setEntitySVG()
 		this._createEmotionalStateLabel()
 	}
 
@@ -161,6 +165,8 @@ class Diabstracter implements DiabstracterInterface {
 
 		this.coreCount = params.coreCount
 		this.coreTotal = params.coreTotal
+
+		this.viewRange = params.viewRange
 
 		this.speed = params.speed
 		this.rotateSpeed = params.rotateSpeed
@@ -183,41 +189,9 @@ class Diabstracter implements DiabstracterInterface {
 		this.occupancyArea.height = params.height
 	}
 
-	_setEntitySVG() {
-		this.svg.setAttribute('id', `EntitySvg-${this.entityId}`)
-		this.svg.setAttribute('width', String(this.occupancyArea.width))
-		this.svg.setAttribute('height', String(this.occupancyArea.height))
-		this.svg.style.position = 'absolute'
-		this.svg.style.left = '0px'
-		this.svg.style.top = '0px'
-		// 将 SVG 元素添加到文档中
-		document.body.appendChild(this.svg)
-	}
-
-	_addPartsPolygon(partsPolygon: PartsPolygonPoints) {
-		this.partsPolygonPointsList.push(partsPolygon)
-		this._createPartsSVGPath(partsPolygon)
-	}
-
-	_createPartsSATPolygon(partsPolygon: PartsPolygonPoints) {
-		console.log(partsPolygon)
-	}
-
-	_createPartsSVGPath(partsPolygon: PartsPolygonPoints) {
-		// 创建多边形元素
-		const id = 'svgPolygonEleId'
-		const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
-		const points = partsPolygon.join(' ')
-		// polygon.setAttribute('id', id)
-		this.svg.setAttribute('id', id)
-		polygon.setAttribute('points', points)
-		polygon.setAttribute('fill', '#f1f1f1')
-
-		// 将多边形元素添加到 SVG 元素中
-		this.svg.appendChild(polygon)
-
-		this.svgEleIds.push(`#${id}`)
-		this.partsSATPolygons.push(new SAT.Polygon(new SAT.Vector(0, 0), [[0, 0], [0, 100], [100, 100], [100, 0]].map(([x, y]) => new SAT.Vector(x, y))))
+	_addPolygon(polygon: ExtendedPolygonInterface) {
+		this.polygons.push(polygon)
+		polygon.addCheckMouseCollisionListen(this)
 	}
 
 	_updateEmotionalState(state: EmotionalStateEnum) {
@@ -272,7 +246,10 @@ class Diabstracter implements DiabstracterInterface {
 	}
 
 	startState() { // 状态执行函数
-		this.changeState(new State_SearchPlayer())
+		// this.changeState(new State_SearchPlayer())
+		// this.changeState(new State_SearchPlayer())
+		// this.changeState(new State_Move_Test())
+		this.changeState(new State_Rotate_Test())
 	}
 
 	changeState(state: State) {
@@ -283,7 +260,17 @@ class Diabstracter implements DiabstracterInterface {
 	}
 
 	handleMsg(msg: EntitiesMsgInterface) {
-		// console.log(msg)
+		if (msg.type === EntitiesMsgTypeEnum.Cursor_Collision) {
+			const cursor = new Cursor()
+			const msgToCursor = new EntitiesMsg({
+				type: EntitiesMsgTypeEnum.Cursor_Collision,
+				payload: {
+					entityId: this.entityId, // 自己的entityId
+					polygonEntityId: msg.payload.polygonEntityId // 多变形的entityId
+				}
+			})
+			this.MsgDispatcher.send(msgToCursor, [cursor])
+		}
 	}
 
 	destroy() {

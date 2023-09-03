@@ -7,14 +7,14 @@ import {
 enum EntitiesMsgTypeEnum {
 	Cursor_Moving,
 	Cursor_SpeedUpdated,
-	aaa,
-	bbb
+	Cursor_Collision,
+	Point_Collision
 }
 
 type EntitiesMsgInterface = {
 	type: EntitiesMsgTypeEnum;
 	payload?: any;
-	sender: Entity;
+	sender?: Entity;
 }
 
 class EntitiesMsg implements EntitiesMsgInterface {

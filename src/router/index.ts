@@ -78,6 +78,14 @@ const routes: RouteRecordRaw[] = [
 			{
 				path: '/test-cursor',
 				component: async () => import('@/pages/jd/test/test-cursor.vue')
+			},
+			{
+				path: '/test-cursor-double',
+				component: async () => import('@/pages/jd/test/test-cursor-double.vue')
+			},
+			{
+				path: '/test-polygon-class',
+				component: async () => import('@/pages/jd/test/test-polygon-class.vue')
 			}
 		]
 	}

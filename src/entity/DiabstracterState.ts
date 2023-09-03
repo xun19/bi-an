@@ -10,9 +10,8 @@ import {
 import Cursor from './Cursor'
 
 import {
-	action_discoverPlayer,
-	action_checkCollision,
-	action_move,
+	action_move2fb,
+	action_move2lr,
 	action_rotate,
 	action_attackPlayer
 } from './DiabstracterAction'
@@ -32,8 +31,6 @@ class State_Initial implements State {
 
 	exit(target: DiabstracterInterface) {}
 }
-
-let a = 0
 class State_SearchPlayer implements State {
 	enter(target: DiabstracterInterface) {
 		console.log('State_SearchPlayer')
@@ -45,44 +42,28 @@ class State_SearchPlayer implements State {
 		const {x: playerX, y: playerY} = cursor.mousePosition
 		const [selfX, selfY] = target.center
 		const distance = Math.sqrt(((selfX - playerX) ** 2) + ((selfY - playerY) ** 2))
-		// console.log(distance, target.viewRange)
 		if (distance <= target.viewRange) {
 			// 发现玩家
 			target.changeState(new State_DiscoverPlayer())
 		} else {
 			// 继续搜寻
 			const {speed, response} = target
-			// if (a >= 1) {
-			// 	return
-			// }
-
 			action_rotate({
 				subject: target,
 				payload: {
-					isCheckCollision: true,
-					targetPosition: [playerX, playerY],
-					angle: ceateRandomMovingRotate(target),
-					direction: 'normal'
+					angle: ceateRandomMovingRotate(target)
 				},
 				hooks: {
 					end() {
-						a++
-
-						// console.log('action_rotate end')
-						action_move({
+						action_move2fb({
 							subject: target,
 							payload: {
 								isCheckCollision: true,
 								targetPosition: [playerX, playerY],
-								translate: {
-									x: ceateRandomMovingPath().x, // 如何设定盲目状态下的移动范围？
-									y: ceateRandomMovingPath().y // 设计一个得到随机路径的方法
-								}
+								translate: ceateRandomMovingPath().x
 							},
 							hooks: {
 								end() {
-									// console.log('action_move end')
-									target.currentTargetPosition = [selfX + 100, selfY + 0]
 									target.changeState(new State_SearchPlayer())
 								}
 							}
@@ -103,17 +84,13 @@ class State_DiscoverPlayer implements State {
 	}
 
 	update(target: DiabstracterInterface) {
-		// action_discoverPlayer({
-		// 	subject: target,
-		// 	hooks: {
-		// 		update(position) {
 		const cursor = new Cursor()
 		const {x: playerX, y: playerY} = cursor.mousePosition
 		// 将玩家位置作为自己的行动目的地
 		target.currentTargetPosition = [playerX, playerY]
-		const [selfX, selfY] = target.center
+		const [selfX, selfY] = target.polygons[0].centerPoint
 		const distance = Math.sqrt(((selfX - playerX) ** 2) + ((selfY - playerY) ** 2))
-		const translate = {x: distance, y: 0}
+		const translate = distance
 		const angle = createRotateToPAangle([selfX, selfY], [playerX, playerY]) - target.currentRotateAngle
 
 		if (distance > target.viewRange) {
@@ -124,21 +101,12 @@ class State_DiscoverPlayer implements State {
 
 		action_rotate({
 			subject: target,
-			payload: {
-				isCheckCollision: true,
-				targetPosition: [playerX, playerY],
-				angle,
-				direction: 'normal'
-			},
+			payload: {angle},
 			hooks: {
 				end() {
-					action_move({
+					action_move2fb({
 						subject: target,
-						payload: {
-							isCheckCollision: true,
-							targetPosition: [playerX, playerY],
-							translate
-						},
+						payload: {translate},
 						hooks: {
 							end() {
 								target.changeState(new State_DiscoverPlayer()) // 重复发现玩家的状态行为，直到丢失玩家视野
@@ -148,9 +116,6 @@ class State_DiscoverPlayer implements State {
 				}
 			}
 		})
-		// 		}
-		// 	}
-		// })
 	}
 
 	exit(target: DiabstracterInterface) {}
@@ -175,19 +140,71 @@ class State_LosePlayerPosition implements State {
 	exit(target: DiabstracterInterface) {}
 }
 
-// class State_Move implements State {
-// 	enter(target: DiabstracterInterface) {
-// 		console.log('1')
-// 	}
+class State_Move_Test implements State {
+	enter(target: DiabstracterInterface) {
+		console.log('State_Move_Test enter')
+	}
 
-// 	update(target: DiabstracterInterface) {
-// 		console.log('2')
-// 	}
+	update(target: DiabstracterInterface) {
+		action_move2fb({
+			subject: target,
+			payload: {translate: 500},
+			hooks: {
+				end() {
+					target.changeState(new State_Move_Test2())
+				}
+			}
+		})
+	}
 
-// 	exit(target: DiabstracterInterface) {
-// 		console.log('3')
-// 	}
-// }
+	exit(target: DiabstracterInterface) {
+		console.log('State_Move_Test exit')
+	}
+}
+
+class State_Move_Test2 implements State {
+	enter(target: DiabstracterInterface) {
+		console.log('State_Move_Test enter')
+	}
+
+	update(target: DiabstracterInterface) {
+		action_move2fb({
+			subject: target,
+			payload: {translate: -500},
+			hooks: {
+				end() {
+					target.changeState(new State_Move_Test())
+				}
+			}
+		})
+	}
+
+	exit(target: DiabstracterInterface) {
+		console.log('State_Move_Test exit')
+	}
+}
+
+class State_Rotate_Test implements State {
+	enter(target: DiabstracterInterface) {
+		// console.log('State_Rotate_Test enter')
+	}
+
+	update(target: DiabstracterInterface) {
+		action_rotate({
+			subject: target,
+			payload: {angle: 40},
+			hooks: {
+				end() {
+					target.changeState(new State_Rotate_Test())
+				}
+			}
+		})
+	}
+
+	exit(target: DiabstracterInterface) {
+		// console.log('State_Rotate_Test exit')
+	}
+}
 
 function ceateRandomMovingRotate(target: any) {
 	const flag = target.currentRotateAngle >= 90
@@ -238,7 +255,8 @@ export {
 	State_Initial,
 	State_SearchPlayer,
 	State_DiscoverPlayer,
-	State_LosePlayerPosition
-	// State_Move
+	State_LosePlayerPosition,
+	State_Move_Test,
+	State_Rotate_Test
 }
 

@@ -1,29 +1,37 @@
 <template>
+	<!-- <h3>DOUBLE</h3>
     <div>speed: <span :style="{color}">{{cursorSpeed}}</span> / 100</div>
     <div style="font-size:20px;">HP: <span style="color: red;">{{hp}}</span> / 100</div>
-    <div v-if="isProtected">保护期中...</div>
+    <div v-if="isProtected">保护期中...</div> -->
+	<div style="font-size:20px;position:absolute; top: 300px;">collison: <span style="color: red;">{{hp}}</span> / 100</div>
     <svg id="SvgContainer" width="100" height="100" style="position:absolute">
-    <defs>
-      <linearGradient id="Gradient1">
-        <stop class="stop1" offset="0%" />
-        <stop class="stop2" offset="50%" />
-        <stop class="stop3" offset="100%" />
-      </linearGradient>
-      <linearGradient id="Gradient2" x1="1" x2="0" y1="0" y2="0">
-        <stop offset="0%" stop-color="red" />
-        <stop offset="50%" stop-color="black" stop-opacity="0" />
-        <stop offset="100%" stop-color="blue" />
-      </linearGradient>
-      <!-- <style type="text/css">
-        <![CDATA[
-                #rect1 { fill: url(#Gradient1); }
-                .stop1 { stop-color: red; }
-                .stop2 { stop-color: black; stop-opacity: 0; }
-                .stop3 { stop-color: blue; }
-              ]]>
-      </style> -->
-    </defs>
-  </svg>
+		<defs>
+		<linearGradient id="Gradient1">
+			<stop class="stop1" offset="0%" />
+			<stop class="stop2" offset="50%" />
+			<stop class="stop3" offset="100%" />
+		</linearGradient>
+		<linearGradient id="Gradient2" x1="1" x2="0" y1="0" y2="0">
+			<stop offset="0%" stop-color="red" />
+			<stop offset="50%" stop-color="black" stop-opacity="0" />
+			<stop offset="100%" stop-color="blue" />
+		</linearGradient>
+		</defs>
+	</svg>
+	<svg id="SvgContainer2" width="100" height="100" style="position:absolute">
+		<defs>
+		<linearGradient id="Gradient1">
+			<stop class="stop1" offset="0%" />
+			<stop class="stop2" offset="50%" />
+			<stop class="stop3" offset="100%" />
+		</linearGradient>
+		<linearGradient id="Gradient2" x1="1" x2="0" y1="0" y2="0">
+			<stop offset="0%" stop-color="red" />
+			<stop offset="50%" stop-color="black" stop-opacity="0" />
+			<stop offset="100%" stop-color="blue" />
+		</linearGradient>
+		</defs>
+	</svg>
 </template>
 <script lang="ts" setup>
 import {ref, computed, onMounted} from 'vue'
@@ -62,12 +70,25 @@ cursor.subscribeCollisonEvent(() => {
 onMounted(() => {
 	const polygon = new ExtendedPolygon({
 		points: [[0, 0], [100, 0], [100, 100], [0, 100]],
-		center: [50, 50],
+		svgPoints: [[0, 0], [100, 0], [100, 100], [0, 100]],
+		center: [100, 50],
+		absCenter: [100, 50],
+		satCenter: [50, 50],
 		position: [0, 0],
 		svgContainer: 'SvgContainer'
 	})
+	const polygon2 = new ExtendedPolygon({
+		points: [[100, 0], [200, 0], [200, 100], [100, 100]],
+		svgPoints: [[0, 0], [100, 0], [100, 100], [0, 100]],
+		center: [0, 50],
+		absCenter: [100, 50],
+		satCenter: [150, 50],
+		position: [100, 0],
+		svgContainer: 'SvgContainer2'
+	})
 
 	diabstracter._addPolygon(polygon)
+	diabstracter._addPolygon(polygon2)
 	diabstracter.startState()
 })
 const diabstracter = new Diabstracter({

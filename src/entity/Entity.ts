@@ -2,7 +2,8 @@ import type {EntitiesMsgInterface} from './Msg'
 
 enum EntityTypeEnum {
 	Cursor,
-	Diabstracter
+	Diabstracter,
+	Polygon
 }
 
 type Entity = {
