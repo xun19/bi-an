@@ -33,6 +33,7 @@ type ExtendedPolygonInterface = {
 	checkedCollisionPoints: Point[];
 	svgContainerId: string;
 	svgContainer: SVGSVGElement | undefined;
+	fps: number;
 	animationQueue: Array<() => void>;
 	currentAnimation: any;
 	points: Point[];
@@ -59,9 +60,9 @@ type ExtendedPolygonInterface = {
 	_translateOnX: (translateX: number) => void;
 	_translateOnY: (translateY: number) => void;
 	_rotate: (angleNumer: number) => void;
-	move2lr: (value: number, callbacks?: ActionCallbacks) => void;
-	move2fb: (value: number, callbacks?: ActionCallbacks) => void;
-	rotate: (angleNumer: number, callbacks?: ActionCallbacks) => void;
+	move2lr: (value: number, speed: number, callbacks?: ActionCallbacks) => void;
+	move2fb: (value: number, speed: number, callbacks?: ActionCallbacks) => void;
+	rotate: (angleNumer: number, speed: number, callbacks?: ActionCallbacks) => void;
 	updateAnimation: () => void;
 	checkPointCollision: (point: Point) => boolean;
 	checkPointsCollision: () => void;
@@ -84,6 +85,7 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 	checkedCollisionPoints = [] as Point[]
 	svgContainerId = ''
 	svgContainer = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+	fps = 1000 / 60 // 动画按每秒60帧计算
 	animationQueue = [] as Array<() => void>
 	currentAnimation = null as any
 	points = [] as Point[]
@@ -336,7 +338,7 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 		this.checkPointsCollision()
 	}
 
-	_rotate(angleNumer: number) { // to do:绕着某点旋转？
+	_rotate(angleNumer: number) {
 		this.rotatedAngle += angleNumer
 		this._rotateAroundCenterOnSatJs(angleNumer)
 		this._rotateOnSVG()
@@ -344,63 +346,63 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 		this.checkPointsCollision()
 	}
 
-	move2lr(value: number, callbacks?: ActionCallbacks) {
+	move2lr(value: number, speed: number, callbacks?: ActionCallbacks) {
 		callbacks?.start?.()
 		const animation = () => {
 			let count = 0
 			const flag = setInterval(() => {
-				count += 1
+				count += speed
 				if (count <= Math.abs(value)) {
 					callbacks?.update?.()
-					this._translateOnY(value < 0 ? -1 : 1)
+					this._translateOnY(value < 0 ? -speed : speed)
 				} else {
 					clearInterval(flag)
 					callbacks?.end?.()
 					this.endAnimation()
 				}
-			}, 10)
+			}, this.fps)
 		}
 
 		this.animationQueue.push(animation)
 		this.updateAnimation()
 	}
 
-	move2fb(value: number, callbacks?: ActionCallbacks) {
+	move2fb(value: number, speed: number, callbacks?: ActionCallbacks) {
 		callbacks?.start?.()
 		const animation = () => {
 			let count = 0
 			const flag = setInterval(() => {
-				count += 1
+				count += speed
 				if (count <= Math.abs(value)) {
 					callbacks?.update?.()
-					this._translateOnX(value < 0 ? -1 : 1)
+					this._translateOnX(value < 0 ? -speed : speed)
 				} else {
 					clearInterval(flag)
 					callbacks?.end?.()
 					this.endAnimation()
 				}
-			}, 10)
+			}, this.fps)
 		}
 
 		this.animationQueue.push(animation)
 		this.updateAnimation()
 	}
 
-	rotate(value: number, callbacks?: ActionCallbacks) { // to do:绕着某点旋转？
+	rotate(value: number, speed: number, callbacks?: ActionCallbacks) { // to do:绕着某点旋转？
 		callbacks?.start?.()
 		const animation = () => {
 			let count = 0
 			const flag = setInterval(() => {
-				count += 1
+				count += speed
 				if (count <= Math.abs(value)) {
 					callbacks?.update?.()
-					this._rotate(value < 0 ? -1 : 1)
+					this._rotate(value < 0 ? -speed : speed)
 				} else {
 					clearInterval(flag)
 					callbacks?.end?.()
 					this.endAnimation()
 				}
-			}, 10)
+			}, this.fps)
 		}
 
 		this.animationQueue.push(animation)

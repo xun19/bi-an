@@ -44,13 +44,13 @@ function action_move2fb(params: SkillParams) { // 移动
 
 	polygons.forEach((polygon, index) => {
 		if (index === 0) {
-			polygon.move2fb(translate, {
+			polygon.move2fb(translate, 10, {
 				end() {
 					hooks.end()
 				}
 			})
 		} else {
-			polygon.move2fb(translate)
+			polygon.move2fb(translate, 10)
 		}
 	})
 }
@@ -80,13 +80,13 @@ function action_move2lr(params: SkillParams) { // 移动
 
 	polygons.forEach((polygon, index) => {
 		if (index === 0) {
-			polygon.move2lr(translate, {
+			polygon.move2lr(translate, 10, {
 				end() {
 					hooks.end()
 				}
 			})
 		} else {
-			polygon.move2lr(translate)
+			polygon.move2lr(translate, 10)
 		}
 	})
 }
@@ -114,14 +114,14 @@ function action_rotate(params: SkillParams) { // 转向
 
 	polygons.forEach((polygon, index) => {
 		if (index === 0) {
-			polygon.rotate(angle, {
+			polygon.rotate(angle, 10, {
 				end() {
 					subject.currentRotateAngle += angle
 					hooks.end()
 				}
 			})
 		} else {
-			polygon.rotate(angle)
+			polygon.rotate(angle, 10)
 		}
 	})
 }
