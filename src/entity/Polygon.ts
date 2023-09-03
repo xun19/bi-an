@@ -1,6 +1,5 @@
 /* eslint-disable no-mixed-operators */
 
-/* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as SAT from 'sat'
 import Cursor from './Cursor'
@@ -33,7 +32,7 @@ type ExtendedPolygonInterface = {
 	checkMouseCollisionListeners: Entity[];
 	checkedCollisionPoints: Point[];
 	svgContainerId: string;
-	svgContainer: HTMLElement | null;
+	svgContainer: SVGSVGElement | undefined;
 	animationQueue: Array<() => void>;
 	currentAnimation: any;
 	points: Point[];
@@ -71,7 +70,6 @@ type ExtendedPolygonInterface = {
 	addCheckMouseCollisionListen: (entity: Entity) => void;
 	publishCheckPointCollision: (point: Point) => void;
 	publishCheckMouseCollision: () => void;
-	addToSVG: (svgContainerId: string) => void;
 } & Entity
 
 class ExtendedPolygon implements ExtendedPolygonInterface {
@@ -85,7 +83,7 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 	checkMouseCollisionListeners = [] as Entity[]
 	checkedCollisionPoints = [] as Point[]
 	svgContainerId = ''
-	svgContainer = null as any
+	svgContainer = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
 	animationQueue = [] as Array<() => void>
 	currentAnimation = null as any
 	points = [] as Point[]
@@ -104,7 +102,7 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 		position: 'absolute',
 		left: '0px',
 		top: '0px'
-	}
+	} as any
 
 	constructor(params: InitPolygonParams) {
 		this._initBaseInfo(params)
@@ -115,11 +113,10 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 	}
 
 	_initBaseInfo(params: InitPolygonParams) {
-		const {points, svgContainer} = params
+		const {points} = params
 		this.points = points
 		this.id = String(Math.ceil(Math.random() * 100000000))
 		this.eleId = `ExtendedPolygon-${this.id}`
-		this.svgContainerId = svgContainer ?? '' // 在 TypeScript（TS）中，?? 是一个空值合并运算符（Nullish Coalescing Operator）。它用于处理可能为 null 或 undefined 的值，并提供一个默认值
 		this.entityId = this.EntityManager.createNewId()
 		this.EntityManager.addEntity(this)
 	}
@@ -144,6 +141,21 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 	}
 
 	_createPolygonInstanceOnSVG(points: Point[]) {
+		// 创建svg
+		this.svgContainerId = 'PolygonSvgContainer-' + this.id
+		this.svgContainer.setAttribute('id', this.svgContainerId)
+		this.svgContainer.setAttribute('width', '100')
+		this.svgContainer.setAttribute('height', '100')
+		this.polygonCssStyle = this.svgContainer.style
+		this.polygonCssStyle.position = 'absolute'
+		const [positionX, positionY] = this.currentPosition
+		this.polygonCssStyle.left = `${positionX}px`
+		this.polygonCssStyle.top = `${positionY}px`
+		const [cssOriginX, cssOriginY] = this.cssOrigin
+		this.polygonCssStyle['transform-origin'] = `${cssOriginX}px ${cssOriginY}px`
+		document.body.appendChild(this.svgContainer)
+
+		// 创建svg里的polygon
 		const svgPoints = points.map(point => ([
 			point[0] - this.currentPosition[0],
 			point[1] - this.currentPosition[1]
@@ -151,27 +163,15 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 		const pointsString = svgPoints.flat().join(' ')
 		this.polygonInstanceOnSVG.setAttribute('id', this.eleId)
 		this.polygonInstanceOnSVG.setAttribute('points', pointsString)
-		const s = 'url(#Gradient2)' // this.currentPosition[0] === 100 ? 'url(#Gradient2)' : '#f1f1f1'
+		const s = '#f1f1f1' // 'url(#Gradient2)' // this.currentPosition[0] === 100 ? 'url(#Gradient2)' : '#f1f1f1'
+		// note：linearGradient 可以跨svg生效？ svg里也可以定义style
 		this.polygonInstanceOnSVG.setAttribute('fill', s) // 'url(#Gradient2)')
+		this.svgContainer.appendChild(this.polygonInstanceOnSVG)
+
 		// to do: 绑定mousemove事件
-		if (this.svgContainerId) {
-			this.addToSVG(this.svgContainerId)
-		}
 	}
 
 	addToSVG(svgContainerId: string) { // 得主动加了
-		const svg = document.getElementById(svgContainerId)
-		if (svg) {
-			svg.appendChild(this.polygonInstanceOnSVG)
-			this.svgContainer = svg
-			this.polygonCssStyle = this.svgContainer.style
-			this.polygonCssStyle.position = 'absolute'
-			const [x, y] = this.currentPosition
-			this.polygonCssStyle.left = `${x}px`
-			this.polygonCssStyle.top = `${y}px`
-			const [cssOriginX, cssOriginY] = this.cssOrigin
-			this.polygonCssStyle['transform-origin'] = `${cssOriginX}px ${cssOriginY}px`
-		}
 	}
 
 	_translateXOnSatJs(translateX: number) {
@@ -358,7 +358,7 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 					callbacks?.end?.()
 					this.endAnimation()
 				}
-			}, 50)
+			}, 10)
 		}
 
 		this.animationQueue.push(animation)
@@ -379,7 +379,7 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 					callbacks?.end?.()
 					this.endAnimation()
 				}
-			}, 50)
+			}, 10)
 		}
 
 		this.animationQueue.push(animation)
@@ -400,7 +400,7 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 					callbacks?.end?.()
 					this.endAnimation()
 				}
-			}, 50)
+			}, 10)
 		}
 
 		this.animationQueue.push(animation)
