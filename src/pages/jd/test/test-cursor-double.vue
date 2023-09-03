@@ -1,8 +1,8 @@
 <template>
-	<!-- <h3>DOUBLE</h3>
+	<h3>DOUBLE</h3>
     <div>speed: <span :style="{color}">{{cursorSpeed}}</span> / 100</div>
     <div style="font-size:20px;">HP: <span style="color: red;">{{hp}}</span> / 100</div>
-    <div v-if="isProtected">保护期中...</div> -->
+    <div v-if="isProtected">保护期中...</div>
 	<div style="font-size:20px;position:absolute; top: 300px;">collison: <span style="color: red;">{{hp}}</span> / 100</div>
     <svg id="SvgContainer" width="100" height="100" style="position:absolute">
 		<defs>
@@ -55,10 +55,10 @@ cursor.subscribeComputingMouseSpeed((speed: number) => {
 cursor.subscribeCollisonEvent(() => {
 	// if (!isProtected.value) {
 	hp.value -= 1
-	// 	isProtected.value = true
-	// 	setTimeout(() => {
-	// 		isProtected.value = false
-	// 	}, 3000)
+	// isProtected.value = true
+	// setTimeout(() => {
+	// 	isProtected.value = false
+	// }, 3000)
 	// }
 
 	if (hp.value <= 0) {
@@ -70,19 +70,13 @@ cursor.subscribeCollisonEvent(() => {
 onMounted(() => {
 	const polygon = new ExtendedPolygon({
 		points: [[0, 0], [100, 0], [100, 100], [0, 100]],
-		svgPoints: [[0, 0], [100, 0], [100, 100], [0, 100]],
-		center: [100, 50],
 		absCenter: [100, 50],
-		satCenter: [50, 50],
 		position: [0, 0],
 		svgContainer: 'SvgContainer'
 	})
 	const polygon2 = new ExtendedPolygon({
 		points: [[100, 0], [200, 0], [200, 100], [100, 100]],
-		svgPoints: [[0, 0], [100, 0], [100, 100], [0, 100]],
-		center: [0, 50],
 		absCenter: [100, 50],
-		satCenter: [150, 50],
 		position: [100, 0],
 		svgContainer: 'SvgContainer2'
 	})

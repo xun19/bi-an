@@ -88,7 +88,7 @@ class State_DiscoverPlayer implements State {
 		const {x: playerX, y: playerY} = cursor.mousePosition
 		// 将玩家位置作为自己的行动目的地
 		target.currentTargetPosition = [playerX, playerY]
-		const [selfX, selfY] = target.polygons[0].centerPoint
+		const [selfX, selfY] = target.polygons[0].absCenter
 		const distance = Math.sqrt(((selfX - playerX) ** 2) + ((selfY - playerY) ** 2))
 		const translate = distance
 		const angle = createRotateToPAangle([selfX, selfY], [playerX, playerY]) - target.currentRotateAngle

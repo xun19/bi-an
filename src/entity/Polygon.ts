@@ -13,10 +13,7 @@ type Point = [number, number]
 
 type InitPolygonParams = {
 	points: Point[];
-	svgPoints: Point[];
-	center: Point;
 	absCenter: Point;
-	satCenter: Point;
 	position: Point;
 	svgContainer?: string;
 }
@@ -40,9 +37,8 @@ type ExtendedPolygonInterface = {
 	animationQueue: Array<() => void>;
 	currentAnimation: any;
 	points: Point[];
-	centerPoint: Point;
+	cssOrigin: Point;
 	absCenter: Point;
-	satCenter: Point;
 	currentPosition: [number, number];
 	translateX: number;
 	translateY: number;
@@ -50,15 +46,16 @@ type ExtendedPolygonInterface = {
 	polygonInstanceOnSatJs: SAT.Polygon;
 	polygonInstanceOnSVG: SVGPolygonElement;
 	polygonCssStyle: any;
+	_initBaseInfo: (params: InitPolygonParams) => void;
 	_setInitalCenterPoint: (point: Point) => void; // 只在初始化时使用
-	_setInitalSatCenter: (point: Point) => void; // 只在初始化时使用
 	_setInitalPosition: (point: Point) => void; // // 只在初始化时使用
-	_createPolygonInstanceOnSatJs: (points: Point[], center: Point) => void;
+	_createPolygonInstanceOnSatJs: (points: Point[]) => void;
 	_createPolygonInstanceOnSVG: (points: Point[]) => void;
 	_translateXOnSatJs: (translateX: number) => void;
 	_translateYOnSatJs: (translateX: number) => void;
-	_rotateOnSatJs: (angleNumer: number) => void;
-	_handleMoveXEnd: (translateX: number) => void;
+	_rotateAroundPointOnSatJs: (angleNumer: number, originPoint: Point) => void;
+	_rotateAroundCenterOnSatJs: (angleNumer: number) => void;
+	_handleMoveXEnd: (translateX: number) => void; // 移动结束后进行参数更新
 	_handleMoveYEnd: (translateY: number) => void;
 	_translateOnX: (translateX: number) => void;
 	_translateOnY: (translateY: number) => void;
@@ -93,9 +90,8 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 	currentAnimation = null as any
 	points = [] as Point[]
 	svgPoints = [] as Point[]
-	centerPoint = [0, 0] as Point
+	cssOrigin = [0, 0] as Point
 	absCenter = [0, 0] as Point
-	satCenter = [0, 0] as Point
 	currentPosition = [0, 0] as [number, number]
 	translateX = 0
 	translateY = 0
@@ -112,62 +108,50 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 
 	constructor(params: InitPolygonParams) {
 		this._initBaseInfo(params)
-		this._createPolygonInstanceOnSatJs(params.points, params.center)
-		this._createPolygonInstanceOnSVG(params.svgPoints)
-		this._setInitalCenterPoint(params.center)
-		this._setInitalAbsCenter(params.absCenter)
-		this._setInitalSatCenter(params.satCenter)
+		this._createPolygonInstanceOnSatJs(params.points)
 		this._setInitalPosition(params.position)
+		this._setInitalCenterPoint(params.absCenter)
+		this._createPolygonInstanceOnSVG(params.points)
 	}
 
 	_initBaseInfo(params: InitPolygonParams) {
 		const {points, svgContainer} = params
 		this.points = points
-		this.id = String(this._createId())
+		this.id = String(Math.ceil(Math.random() * 100000000))
 		this.eleId = `ExtendedPolygon-${this.id}`
 		this.svgContainerId = svgContainer ?? '' // 在 TypeScript（TS）中，?? 是一个空值合并运算符（Nullish Coalescing Operator）。它用于处理可能为 null 或 undefined 的值，并提供一个默认值
 		this.entityId = this.EntityManager.createNewId()
 		this.EntityManager.addEntity(this)
 	}
 
-	_createId() {
-		return Math.ceil(Math.random() * 100000000)
+	_setInitalPosition(point: Point) {
+		this.currentPosition = point
 	}
 
-	_createPolygonInstanceOnSatJs(points: Point[], center: Point) {
-		this.centerPoint = center
+	_setInitalCenterPoint(point: Point) {
+		this.absCenter = point
+		this.cssOrigin = [
+			point[0] - this.currentPosition[0],
+			point[1] - this.currentPosition[1]
+		]
+	}
+
+	_createPolygonInstanceOnSatJs(points: Point[]) {
 		this.polygonInstanceOnSatJs = new SAT.Polygon(
 			new SAT.Vector(),
 			points.map(([x, y]) => new SAT.Vector(x, y))
 		)
 	}
 
-	_setInitalCenterPoint(point: Point) {
-		const [x, y] = point
-		this.centerPoint = point
-		this.polygonCssStyle['transform-origin'] = `${x}px ${y}px`
-	}
-
-	_setInitalAbsCenter(point: Point) {
-		this.absCenter = point
-	}
-
-	_setInitalSatCenter(point: Point) {
-		this.satCenter = point
-	}
-
-	_setInitalPosition(point: Point) {
-		const [x, y] = point
-		this.currentPosition = point
-		this.polygonCssStyle.left = `${x}px`
-		this.polygonCssStyle.top = `${y}px`
-	}
-
 	_createPolygonInstanceOnSVG(points: Point[]) {
-		const pointsString = points.flat().join(' ')
+		const svgPoints = points.map(point => ([
+			point[0] - this.currentPosition[0],
+			point[1] - this.currentPosition[1]
+		]))
+		const pointsString = svgPoints.flat().join(' ')
 		this.polygonInstanceOnSVG.setAttribute('id', this.eleId)
 		this.polygonInstanceOnSVG.setAttribute('points', pointsString)
-		const s = this.centerPoint[0] === 100 ? 'url(#Gradient2)' : '#f1f1f1'
+		const s = 'url(#Gradient2)' // this.currentPosition[0] === 100 ? 'url(#Gradient2)' : '#f1f1f1'
 		this.polygonInstanceOnSVG.setAttribute('fill', s) // 'url(#Gradient2)')
 		// to do: 绑定mousemove事件
 		if (this.svgContainerId) {
@@ -177,12 +161,16 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 
 	addToSVG(svgContainerId: string) { // 得主动加了
 		const svg = document.getElementById(svgContainerId)
-		console.log(svg)
 		if (svg) {
 			svg.appendChild(this.polygonInstanceOnSVG)
 			this.svgContainer = svg
 			this.polygonCssStyle = this.svgContainer.style
 			this.polygonCssStyle.position = 'absolute'
+			const [x, y] = this.currentPosition
+			this.polygonCssStyle.left = `${x}px`
+			this.polygonCssStyle.top = `${y}px`
+			const [cssOriginX, cssOriginY] = this.cssOrigin
+			this.polygonCssStyle['transform-origin'] = `${cssOriginX}px ${cssOriginY}px`
 		}
 	}
 
@@ -226,42 +214,11 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 		this.polygonInstanceOnSatJs.translate(resultX, resultY)
 	}
 
-	_rotateRoundCenterOnSatJs(angleNumer: number) {
-		const center = this.absCenter
-		const {satCenter} = this
-		let translateX = center[0] - satCenter[0]
-		let translateY = center[1] - satCenter[1]
-		const flagX = translateX === 0
-			? 0.000001
-			: translateX > 0 ? -1 : 1
-		const flagY = translateY === 0
-			? 0.000001
-			: translateY > 0 ? -1 : 1
-		const distance = Math.sqrt((translateX ** 2) + (translateY ** 2))
-
-		// 将多边形的顶点坐标转换为相对于中心点的局部坐标系
-		translateX = translateX === 0 ? 0.000000000000001 : translateX
-		translateY = translateY === 0 ? 0.000000000000001 : translateY
-		const angle = Math.PI * (angleNumer / 180) // 弧度表示
-		this.polygonInstanceOnSatJs.translate(translateX, translateY)
-		this.polygonInstanceOnSatJs.setAngle(angle)
-
-		const rotatedAngle = Math.PI * (this.rotatedAngle / 180) // 弧度表示
-		// 向量在 x 轴上的分量
-		const xComponent = flagX * distance * Math.cos(rotatedAngle)
-		// 向量在 y 轴上的分量
-		const yComponent = flagY * distance * Math.sin(rotatedAngle)
-
-		// console.log(this.absCenter[0], this.satCenter[0], translateX, center[0] - satCenter[0])
-		// console.log(this.absCenter, this.satCenter, [translateX, translateY], [xComponent, yComponent])
-		this.polygonInstanceOnSatJs.translate(xComponent, yComponent)
-		this.satCenter = [center[0] + xComponent, center[1] + yComponent]
-		// 位移时也得更新
-		// console.log(center[0], satCenter[0], a, translateX, center[0] - a, center[0] - satCenter[0])
-		// console.log(this.absCenter, this.satCenter, [translateX, translateY], [xComponent, yComponent])
+	_rotateAroundCenterOnSatJs(angleNumer: number) {
+		this._rotateAroundPointOnSatJs(angleNumer, this.absCenter)
 	}
 
-	_rotateAroundPointOnSatJs(angleNumer: number) {
+	_rotateAroundPointOnSatJs(angleNumer: number, originPoint: Point) {
 		// 定义多边形
 		const polygon = this.polygonInstanceOnSatJs
 
@@ -274,25 +231,14 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 
 		// 定义旋转的角度和中心点
 		const angle = Math.PI * (angleNumer / 180) // 弧度表示 // Math.PI / 4 // 45 度
-		const origin = new SAT.Vector(this.absCenter[0], this.absCenter[1]) // new SAT.Vector(50, 50)
+		const [originX, originY] = originPoint
+		const origin = new SAT.Vector(originX, originY)
 
-		// 将多边形的所有顶点相对于中心点进行旋转
-		// for (let i = 0; i < polygon.points.length; i++) {
-		// 	polygon.points[i] = rotatePoint(polygon.points[i], angle, origin)
-		// }
-
+		// 将多边形的所有顶点相对于某点进行旋转
 		const newPoints = polygon.points.map(point => rotatePoint(point, angle, origin))
 
 		// 更新多边形的位置
-		// console.log(polygon
 		polygon.setPoints(newPoints)
-	}
-
-	_rotateOnSatJs(angleNumer: number) { // to do:绕着某点旋转？
-		// 将多边形的顶点坐标转换为相对于中心点的局部坐标系
-		const angle = Math.PI * (angleNumer / 180) // 弧度表示
-
-		this.polygonInstanceOnSatJs.setAngle(angle)
 	}
 
 	// 调用translate并非下达动作指令，而是得到《基于最初起点》变换后的最后状态/结果。
@@ -310,7 +256,7 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 
 	_handleMoveXEnd(translateX: number) {
 		const translateY = 0
-		const [centerX, centerY] = this.centerPoint
+		const [centerX, centerY] = this.absCenter
 		const [currentLeft, currentTop] = this.currentPosition
 
 		// 已知向量的移动距离和角度（弧度）
@@ -334,12 +280,16 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 
 		// 记录变更后的位置(left、top)和中心点
 		this.currentPosition = [resultLeft, resultTop]
-		this.centerPoint = [centerX + xComponent, centerY + yComponent]
+		this.absCenter = [centerX + xComponent, centerY + yComponent]
+		this.cssOrigin = [
+			this.absCenter[0] - this.currentPosition[0],
+			this.absCenter[1] - this.currentPosition[1]
+		]
 	}
 
 	_handleMoveYEnd(translateY: number) {
 		const translateX = 0
-		const [centerX, centerY] = this.centerPoint
+		const [centerX, centerY] = this.absCenter
 		const [currentLeft, currentTop] = this.currentPosition
 
 		// 已知向量的移动距离和角度（弧度）
@@ -363,7 +313,11 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 
 		// 记录变更后的位置(left、top)和中心点
 		this.currentPosition = [resultLeft, resultTop]
-		this.centerPoint = [centerX + xComponent, centerY + yComponent]
+		this.absCenter = [centerX + xComponent, centerY + yComponent]
+		this.cssOrigin = [
+			this.absCenter[0] - this.currentPosition[0],
+			this.absCenter[1] - this.currentPosition[1]
+		]
 	}
 
 	_translateOnX(translateX: number) {
@@ -384,7 +338,7 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 
 	_rotate(angleNumer: number) { // to do:绕着某点旋转？
 		this.rotatedAngle += angleNumer
-		this._rotateAroundPointOnSatJs(angleNumer) // this._rotateRoundCenterOnSatJs(angleNumer) // this._rotateOnSatJs(angleNumer)
+		this._rotateAroundCenterOnSatJs(angleNumer)
 		this._rotateOnSVG()
 		this.checkMouseCollision()
 		this.checkPointsCollision()
@@ -395,16 +349,16 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 		const animation = () => {
 			let count = 0
 			const flag = setInterval(() => {
-				count += 10
+				count += 1
 				if (count <= Math.abs(value)) {
 					callbacks?.update?.()
-					this._translateOnY(value < 0 ? -10 : 10)
+					this._translateOnY(value < 0 ? -1 : 1)
 				} else {
 					clearInterval(flag)
 					callbacks?.end?.()
 					this.endAnimation()
 				}
-			}, 10)
+			}, 50)
 		}
 
 		this.animationQueue.push(animation)
@@ -416,16 +370,16 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 		const animation = () => {
 			let count = 0
 			const flag = setInterval(() => {
-				count += 10
+				count += 1
 				if (count <= Math.abs(value)) {
 					callbacks?.update?.()
-					this._translateOnX(value < 0 ? -10 : 10)
+					this._translateOnX(value < 0 ? -1 : 1)
 				} else {
 					clearInterval(flag)
 					callbacks?.end?.()
 					this.endAnimation()
 				}
-			}, 10)
+			}, 50)
 		}
 
 		this.animationQueue.push(animation)
@@ -437,10 +391,10 @@ class ExtendedPolygon implements ExtendedPolygonInterface {
 		const animation = () => {
 			let count = 0
 			const flag = setInterval(() => {
-				count += 2
+				count += 1
 				if (count <= Math.abs(value)) {
 					callbacks?.update?.()
-					this._rotate(value < 0 ? -2 : 2)
+					this._rotate(value < 0 ? -1 : 1)
 				} else {
 					clearInterval(flag)
 					callbacks?.end?.()

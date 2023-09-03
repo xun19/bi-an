@@ -246,10 +246,9 @@ class Diabstracter implements DiabstracterInterface {
 	}
 
 	startState() { // 状态执行函数
-		// this.changeState(new State_SearchPlayer())
-		// this.changeState(new State_SearchPlayer())
+		this.changeState(new State_SearchPlayer())
 		// this.changeState(new State_Move_Test())
-		this.changeState(new State_Rotate_Test())
+		// this.changeState(new State_Rotate_Test())
 	}
 
 	changeState(state: State) {
